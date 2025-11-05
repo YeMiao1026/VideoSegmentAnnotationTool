@@ -1,0 +1,7 @@
+goto http://localhost:5174/
+[script.error] Error: net::ERR_CONNECTION_REFUSED at http://localhost:5174/
+    at navigate (C:\Document\Code\VideoSegmentAnnotationTool\frontend\node_modules\puppeteer-core\lib\cjs\puppeteer\cdp\Frame.js:184:27)
+    at async Deferred.race (C:\Document\Code\VideoSegmentAnnotationTool\frontend\node_modules\puppeteer-core\lib\cjs\puppeteer\util\Deferred.js:36:20)
+    at async CdpFrame.goto (C:\Document\Code\VideoSegmentAnnotationTool\frontend\node_modules\puppeteer-core\lib\cjs\puppeteer\cdp\Frame.js:150:25)
+    at async CdpPage.goto (C:\Document\Code\VideoSegmentAnnotationTool\frontend\node_modules\puppeteer-core\lib\cjs\puppeteer\api\Page.js:572:20)
+    at async C:\Document\Code\VideoSegmentAnnotationTool\frontend\test\e2e_puppeteer.js:65:5
