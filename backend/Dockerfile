@@ -13,7 +13,7 @@ RUN apt-get update \
 WORKDIR /app
 
 # Install Python deps
-COPY backend/requirements.txt /app/requirements.txt
+COPY backend/requirements-prod.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
 # Copy app code
