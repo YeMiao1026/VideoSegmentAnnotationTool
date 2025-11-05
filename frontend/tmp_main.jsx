@@ -1,0 +1,9 @@
+import __vite__cjsImport0_react from "/node_modules/.vite/deps/react.js?v=fe084d98"; const React = __vite__cjsImport0_react.__esModule ? __vite__cjsImport0_react.default : __vite__cjsImport0_react;
+import __vite__cjsImport1_reactDom_client from "/node_modules/.vite/deps/react-dom_client.js?v=fe084d98"; const createRoot = __vite__cjsImport1_reactDom_client["createRoot"];
+import App from "/src/App.jsx";
+import "/src/styles.css";
+createRoot(document.getElementById("root")).render(
+  /* @__PURE__ */ React.createElement(React.StrictMode, null, /* @__PURE__ */ React.createElement(App, null))
+);
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIm1haW4uanN4Il0sInNvdXJjZXNDb250ZW50IjpbImltcG9ydCBSZWFjdCBmcm9tICdyZWFjdCdcclxuaW1wb3J0IHsgY3JlYXRlUm9vdCB9IGZyb20gJ3JlYWN0LWRvbS9jbGllbnQnXHJcbmltcG9ydCBBcHAgZnJvbSAnLi9BcHAnXHJcbmltcG9ydCAnLi9zdHlsZXMuY3NzJ1xyXG5cclxuY3JlYXRlUm9vdChkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgncm9vdCcpKS5yZW5kZXIoXHJcbiAgPFJlYWN0LlN0cmljdE1vZGU+XHJcbiAgICA8QXBwIC8+XHJcbiAgPC9SZWFjdC5TdHJpY3RNb2RlPlxyXG4pXHJcbiJdLCJtYXBwaW5ncyI6IkFBQUEsT0FBTyxXQUFXO0FBQ2xCLFNBQVMsa0JBQWtCO0FBQzNCLE9BQU8sU0FBUztBQUNoQixPQUFPO0FBRVAsV0FBVyxTQUFTLGVBQWUsTUFBTSxDQUFDLEVBQUU7QUFBQSxFQUMxQyxvQ0FBQyxNQUFNLFlBQU4sTUFDQyxvQ0FBQyxTQUFJLENBQ1A7QUFDRjsiLCJuYW1lcyI6W119
