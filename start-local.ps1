@@ -1,4 +1,4 @@
-# One-click local start for Windows (PowerShell)
+﻿# One-click local start for Windows (PowerShell)
 # - Opens two PowerShell windows: backend (Flask) and frontend (Vite)
 # - If Python venv or node_modules missing, will attempt to create/install them
 # Usage: Right-click -> Run with PowerShell, or open PowerShell and run `./start-local.ps1`
@@ -28,11 +28,12 @@ cd '$backendDir'
 if (-not (Test-Path '.venv')) {
   Write-Host 'Creating virtual environment and installing Python requirements...'
   python -m venv .venv
-  .\.venv\Scripts\Activate.ps1
+  # Dot-source the activation script so subsequent commands run in the venv
+  . .\.venv\Scripts\Activate.ps1
   pip install -r requirements.txt
 }
 Write-Host 'Activating venv and starting backend (Flask)...'
-.\.venv\Scripts\Activate.ps1
+. .\.venv\Scripts\Activate.ps1
 $env:FLASK_APP='app.py'
 $env:FLASK_ENV='development'
 flask run --host=127.0.0.1 --port=5000
