@@ -10,6 +10,8 @@ export default function App() {
   const [tags, setTags] = useState(['有趣', '廣告', '重要'])
   const [annotations, setAnnotations] = useState([])
   const [currentSegment, setCurrentSegment] = useState({ videoUrl: '', start: 0, end: 5 })
+  const initializedRef = useRef(false)
+  const [hydrated, setHydrated] = useState(false)
 
   // Load persisted data on mount
   useEffect(() => {
@@ -25,6 +27,9 @@ export default function App() {
         if (annsResp.data && Array.isArray(annsResp.data.annotations)) {
           setAnnotations(annsResp.data.annotations)
         }
+  // mark hydration complete so persistence effects won't overwrite server state
+  initializedRef.current = true
+  setHydrated(true)
       } catch (e) {
         // ignore load errors (fallback to local state)
         console.warn('Failed to load persisted labels/annotations', e)
@@ -39,6 +44,8 @@ export default function App() {
 
   // persist tags when changed
   useEffect(() => {
+    // don't persist until we've loaded server state to avoid overwriting on first render
+  if (!initializedRef.current) return
     async function persistTags() {
       try {
         await axios.put('http://127.0.0.1:5000/api/labels', { labels: tags })
@@ -89,6 +96,8 @@ export default function App() {
 
     // persist annotations when changed (debounced-ish)
     useEffect(() => {
+      // don't persist until we've loaded server state to avoid overwriting on first render
+    if (!initializedRef.current) return
       let mounted = true
       const toPersist = annotations.map(a => ({
         id: a.id,
@@ -175,24 +184,29 @@ export default function App() {
 
   return (
     <div className="app">
+      {!hydrated && (
+        <div style={{ background: '#fff7cc', padding: 10, textAlign: 'center', border: '1px solid #ffe58f', marginBottom: 12 }}>
+          正在載入資料... 請稍候，介面在同步完成前已被鎖定。
+        </div>
+      )}
       <div className="panel">
         <div className="header">標籤管理</div>
-        <TagManager tags={tags} onTagsUpdate={handleTagsUpdate} />
+        <TagManager tags={tags} onTagsUpdate={handleTagsUpdate} disabled={!hydrated} />
       </div>
 
       <div className="panel">
         <div className="header">影片控制與預覽</div>
-        <VideoControl onSegmentSubmit={handleSegmentSubmit} currentSegment={currentSegment} onDownloadClip={handleDownloadClip} />
+        <VideoControl onSegmentSubmit={handleSegmentSubmit} currentSegment={currentSegment} onDownloadClip={handleDownloadClip} disabled={!hydrated} />
       </div>
 
       <div className="panel">
         <div className="header">已標註清單</div>
-          <AnnotationList annotations={annotations} onDelete={(idx) => setAnnotations(prev => prev.filter((_, i) => i !== idx))} />
+      <AnnotationList annotations={annotations} onDelete={(idx) => setAnnotations(prev => prev.filter((_, i) => i !== idx))} disabled={!hydrated} />
       </div>
 
       <div className="panel" style={{ gridColumn: '1 / -1' }}>
         <div className="header">標記按鈕</div>
-        <LabelingActions tags={tags} onLabelClick={handleLabelClick} />
+        <LabelingActions tags={tags} onLabelClick={handleLabelClick} disabled={!hydrated} />
       </div>
     </div>
   )

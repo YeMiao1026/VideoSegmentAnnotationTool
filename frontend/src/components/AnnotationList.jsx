@@ -1,7 +1,7 @@
 import React from 'react'
 import JSZip from 'jszip'
 
-export default function AnnotationList({ annotations, onDelete }) {
+export default function AnnotationList({ annotations, onDelete, disabled }) {
   function exportCSV() {
     const rows = ["video_url,start_time,end_time,labels,notes"]
     for (const a of annotations) {
@@ -87,8 +87,8 @@ export default function AnnotationList({ annotations, onDelete }) {
       <div style={{ marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <strong>標註列表</strong>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button className="btn btn-primary btn-small" onClick={exportCSV}>匯出 CSV</button>
-          <button className="btn btn-small" onClick={exportWithClips}>匯出 CSV + 片段 (ZIP)</button>
+          <button className="btn btn-primary btn-small" onClick={exportCSV} disabled={disabled}>匯出 CSV</button>
+          <button className="btn btn-small" onClick={exportWithClips} disabled={disabled}>匯出 CSV + 片段 (ZIP)</button>
         </div>
       </div>
       <ol style={{ paddingLeft: 18, margin: 0 }}>
@@ -108,7 +108,7 @@ export default function AnnotationList({ annotations, onDelete }) {
                 </div>
               </div>
               <div>
-                <button className="btn icon-btn" onClick={() => onDelete(idx)} title="刪除標註">
+                <button className="btn icon-btn" onClick={() => !disabled && onDelete(idx)} title="刪除標註" disabled={disabled}>
                   <svg className="icon-inline" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6M10 11v6M14 11v6M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 </button>
               </div>

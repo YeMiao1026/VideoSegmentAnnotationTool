@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import YouTube from 'react-youtube'
 
-export default function VideoControl({ onSegmentSubmit, currentSegment, onDownloadClip }) {
+export default function VideoControl({ onSegmentSubmit, currentSegment, onDownloadClip, disabled }) {
   const [url, setUrl] = useState(currentSegment.videoUrl)
   const [start, setStart] = useState(currentSegment.start)
   const [end, setEnd] = useState(currentSegment.end)
@@ -205,14 +205,14 @@ export default function VideoControl({ onSegmentSubmit, currentSegment, onDownlo
   return (
     <div>
       <div style={{ marginBottom: 8 }} className="controls">
-        <input style={{ width: 360 }} placeholder="YouTube 連結" value={url} onChange={e => setUrl(e.target.value)} />
-  <input style={{ width: 80 }} placeholder="start (s or m:ss)" value={start} onChange={e => setStart(e.target.value)} />
-  <input style={{ width: 80 }} placeholder="end (s or m:ss)" value={end} onChange={e => setEnd(e.target.value)} />
-        <button className="btn btn-small" onClick={loadSegment} title="載入並預覽片段">
+    <input style={{ width: 360 }} placeholder="YouTube 連結" value={url} onChange={e => setUrl(e.target.value)} disabled={disabled} />
+  <input style={{ width: 80 }} placeholder="start (s or m:ss)" value={start} onChange={e => setStart(e.target.value)} disabled={disabled} />
+  <input style={{ width: 80 }} placeholder="end (s or m:ss)" value={end} onChange={e => setEnd(e.target.value)} disabled={disabled} />
+    <button className="btn btn-small" onClick={loadSegment} title="載入並預覽片段" disabled={disabled}>
           <svg className="icon-inline" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 21l-6-6M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
           載入/預覽
         </button>
-        <button className="btn btn-primary btn-small" disabled={!isSegmentValid} onClick={() => {
+  <button className="btn btn-primary btn-small" disabled={disabled || !isSegmentValid} onClick={() => {
           // 如果目前輸入的 url 與已提交的 segment 不同，先執行載入，確保 currentSegment 更新
           if (!url) {
             setPreviewError('請先輸入 YouTube 連結並載入')
