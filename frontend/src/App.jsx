@@ -11,9 +11,43 @@ export default function App() {
   const [annotations, setAnnotations] = useState([])
   const [currentSegment, setCurrentSegment] = useState({ videoUrl: '', start: 0, end: 5 })
 
+  // Load persisted data on mount
+  useEffect(() => {
+    async function load() {
+      try {
+        const [labelsResp, annsResp] = await Promise.all([
+          axios.get('http://127.0.0.1:5000/api/labels'),
+          axios.get('http://127.0.0.1:5000/api/annotations')
+        ])
+        if (labelsResp.data && Array.isArray(labelsResp.data.labels)) {
+          setTags(labelsResp.data.labels)
+        }
+        if (annsResp.data && Array.isArray(annsResp.data.annotations)) {
+          setAnnotations(annsResp.data.annotations)
+        }
+      } catch (e) {
+        // ignore load errors (fallback to local state)
+        console.warn('Failed to load persisted labels/annotations', e)
+      }
+    }
+    load()
+  }, [])
+
   function handleTagsUpdate(newTags) {
     setTags(newTags)
   }
+
+  // persist tags when changed
+  useEffect(() => {
+    async function persistTags() {
+      try {
+        await axios.put('http://127.0.0.1:5000/api/labels', { labels: tags })
+      } catch (e) {
+        console.warn('Failed to persist tags', e)
+      }
+    }
+    persistTags()
+  }, [tags])
 
   function handleSegmentSubmit(segment) {
     setCurrentSegment(segment)
@@ -48,10 +82,34 @@ export default function App() {
           end_time: Number(currentSegment.end),
           labels: [label]
         }
-        return [ann, ...prev]
+          return [ann, ...prev]
       }
     })
   }
+
+    // persist annotations when changed (debounced-ish)
+    useEffect(() => {
+      let mounted = true
+      const toPersist = annotations.map(a => ({
+        id: a.id,
+        video_id: a.video_id,
+        video_url: a.video_url,
+        start_time: a.start_time,
+        end_time: a.end_time,
+        labels: Array.isArray(a.labels) ? a.labels : [],
+        notes: a.notes || null,
+        clip_filename: a.clip_filename || null
+      }))
+      async function persist() {
+        try {
+          await axios.put('http://127.0.0.1:5000/api/annotations', { annotations: toPersist })
+        } catch (e) {
+          if (mounted) console.warn('Failed to persist annotations', e)
+        }
+      }
+      persist()
+      return () => { mounted = false }
+    }, [annotations])
 
   async function handleDownloadClip() {
     try {
