@@ -1,3 +1,4 @@
+import json
 import os
 import tempfile
 import subprocess
@@ -6,14 +7,144 @@ from flask import Flask, request, send_file, jsonify
 from flask_cors import CORS
 from yt_dlp import YoutubeDL
 
+# SQLAlchemy for persistence
+from sqlalchemy import create_engine, Column, String, Float, Text, Integer
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+
 app = Flask(__name__)
 CORS(app)
+
+# --- Simple SQLite setup ---
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, 'db.sqlite')
+engine = create_engine(f'sqlite:///{DB_PATH}', connect_args={"check_same_thread": False})
+SessionLocal = sessionmaker(bind=engine)
+Base = declarative_base()
+
+
+class Label(Base):
+    __tablename__ = 'labels'
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, unique=True, nullable=False)
+
+
+class Annotation(Base):
+    __tablename__ = 'annotations'
+    id = Column(String, primary_key=True, index=True)
+    video_id = Column(String, nullable=True)
+    video_url = Column(String, nullable=False)
+    start_time = Column(Float, nullable=False)
+    end_time = Column(Float, nullable=False)
+    labels = Column(Text, nullable=True)  # JSON-encoded list
+    notes = Column(Text, nullable=True)
+    clip_filename = Column(String, nullable=True)
+
+
+def init_db():
+    Base.metadata.create_all(bind=engine)
+
+
+init_db()
 
 
 @app.route('/ping', methods=['GET'])
 def ping():
     # 健檢用路由：確認服務可達且回傳 JSON
     return jsonify({'status': 'ok'})
+
+
+@app.route('/api/labels', methods=['GET'])
+def get_labels():
+    db = SessionLocal()
+    try:
+        rows = db.query(Label).order_by(Label.id.desc()).all()
+        labels = [r.name for r in rows]
+        return jsonify({'labels': labels})
+    finally:
+        db.close()
+
+
+@app.route('/api/labels', methods=['PUT'])
+def put_labels():
+    data = request.get_json() or {}
+    labels = data.get('labels')
+    if labels is None or not isinstance(labels, list):
+        return jsonify({'error': 'labels must be a list'}), 400
+    db = SessionLocal()
+    try:
+        # Simple replace semantics: delete all, re-insert
+        db.query(Label).delete()
+        for name in labels:
+            name = str(name).strip()
+            if not name:
+                continue
+            db.add(Label(name=name))
+        db.commit()
+        return jsonify({'status': 'ok', 'labels': labels})
+    finally:
+        db.close()
+
+
+@app.route('/api/annotations', methods=['GET'])
+def get_annotations():
+    db = SessionLocal()
+    try:
+        rows = db.query(Annotation).order_by(Annotation.start_time.desc()).all()
+        out = []
+        for r in rows:
+            try:
+                labels = json.loads(r.labels) if r.labels else []
+            except Exception:
+                labels = []
+            out.append({
+                'id': r.id,
+                'video_id': r.video_id,
+                'video_url': r.video_url,
+                'start_time': r.start_time,
+                'end_time': r.end_time,
+                'labels': labels,
+                'notes': r.notes,
+                'clip_filename': r.clip_filename,
+            })
+        return jsonify({'annotations': out})
+    finally:
+        db.close()
+
+
+@app.route('/api/annotations', methods=['PUT'])
+def put_annotations():
+    data = request.get_json() or {}
+    anns = data.get('annotations')
+    if anns is None or not isinstance(anns, list):
+        return jsonify({'error': 'annotations must be a list'}), 400
+    db = SessionLocal()
+    try:
+        # Replace semantics: delete all and insert provided list
+        db.query(Annotation).delete()
+        for a in anns:
+            try:
+                aid = a.get('id') or a.get('uuid') or None
+                if not aid:
+                    # generate a simple id from video/url/start/end
+                    aid = f"{a.get('video_url','')}_{a.get('start_time')}_{a.get('end_time')}"
+                labels = a.get('labels') or []
+                db.add(Annotation(
+                    id=str(aid),
+                    video_id=a.get('video_id'),
+                    video_url=a.get('video_url') or a.get('videoUrl') or '',
+                    start_time=float(a.get('start_time') or a.get('start') or 0),
+                    end_time=float(a.get('end_time') or a.get('end') or 0),
+                    labels=json.dumps(labels),
+                    notes=a.get('notes'),
+                    clip_filename=a.get('clip_filename')
+                ))
+            except Exception:
+                continue
+        db.commit()
+        return jsonify({'status': 'ok', 'count': len(anns)})
+    finally:
+        db.close()
 
 # Config: 影片暫存最大保存時間/機制視需求延伸
 
